@@ -2,11 +2,21 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>SPA</title>
+    <title>AppAndrePinto</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
+    <script type="text/javascript" src="app.js"></script>
 </head>
-<body>
+<body ng-app="app">
     <h1>Esta é uma aplicação de uma única página</h1>
     <hr>
+    <a href="#/">Home</a>
+    <a href="#event-list/">Event List</a>
+    <a href="#highlighted-events/">Highlighted Events</a>
+    <a href="#event-detail/">Event Detail</a>
+    <a href="#new-event/">New Event</a>
+    <a href="#share-event/">Share Event</a>
 
+    <div>ng-view</div>
 </body>
 </html>
