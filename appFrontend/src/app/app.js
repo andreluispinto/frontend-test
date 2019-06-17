@@ -1,56 +1,127 @@
-var db = require('./db');
-var express = require('express');
-var bodyParser = require('body-parser')
-var cors = require('cors');
-var app = express();
+var fs = require('fs');
+var test = require('tape');
+var request = require('supertest');
+var app = require('../app/server');
 
-app.use(cors());
-app.use(bodyParser.json());
+var expectedEvents = { events: [require('../app/db/events/1.json'), require('../app/db/events/2.json')] }
+var expectedEvent = { event: require('../app/db/events/2.json') };
+var expectedFeaturedEvents = { events: [require('../app/db/events/2.json')] };
+var postEvent = {
+    "title": "24 Festival de Cine para Niños y Jóvenes – Divercine",
+    "eventImage": "http://www.cartelera.com.uy/imagenes_espectaculos/moviedetail13/17511.jpg",
+    "description": "Del lunes 27 de julio al sábado 1º de agosto se desarrolla en el Auditorio del SODRE Nelly Goitiño (18 de Julio y Rio Branco) el 24 Festival de Cine para Niños y Jóvenes - Divercine. La programación, que incluye películas de largo, medio y cortometraje de varias partes del mundo, está dividida en tres franjas de horarios cada día, de acuerdo a las edades del público a las que van dirigidas: a las 13 horas a partir de 3 años de edad; a las 14 horas a partir de los 6 años de edad; y desde las 15 se programan los medio y largometrajes para niños más grandes y adolescentes.",
+    "dates": [
+        "07/27/2015 13:00",
+        "07/28/2015 13:00",
+        "07/29/2015 13:00",
+        "07/30/2015 13:00",
+        "07/31/2015 13:00",
+        "07/1/2015 13:00"
+    ],
+    "location": "Auditorio del SODRE"
+};
 
-app.get('/events', function(_req, res) {
-    res.json({ events: db.findAll() });
+test('GET /events support CORS', function(t) {
+    t.plan(1);
+    request(app)
+        .get('/events')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect('Access-Control-Allow-Origin', '*')
+        .end(function(err, res) {
+            t.error(err, 'No error');
+
+            t.end();
+        });
 });
 
-app.get('/events/featured', function(_req, res) {
-    res.json({ events: db.featured() });
-});
+var app = angular.module("app";
+    ["ngRoute"]);
+app.config(function($routeProvider) {
+            $routeProvider
+                .when("/", ('GET /events returns all events', function(t) {
+                        t.plan(2);
+                        request(app)
+                            .get('/events')
+                            .expect('Content-Type', /json/)
+                            .expect(200)
+                            .end(function(err, res) {
+                                t.error(err, 'No error');
+                                t.same(res.body, expectedEvents);
 
-app.get('/events/:id', function(req, res) {
-    var event = db.finById(req.params.id);
-    if (event) {
-        res.json({ event: event });
-    } else {
-        res.sendStatus(404);
-    }
-});
+                                t.end();
+                            });
+                    })
+                    .when("/event-list", {
+                            ('GET /events returns all events', function(t) {
+                                t.plan(2);
+                                request(app)
+                                    .get('/events')
+                                    .expect('Content-Type', /json/)
+                                    .expect(200)
+                                    .end(function(err, res) {
+                                        t.error(err, 'No error');
+                                        t.same(res.body, expectedEvents);
 
-app.post('/events', function(req, res) {
-    res.json({ event: db.create(req.body.event) });
-});
+                                        t.end();
+                                    });
+                            })
+                            .when("/highlighted-events", {
+                                    ('GET /events/featured returns all featured events', function(t) {
+                                        t.plan(2);
+                                        request(app)
+                                            .get('/events/featured')
+                                            .expect('Content-Type', /json/)
+                                            .expect(200)
+                                            .end(function(err, res) {
+                                                t.error(err, 'No error');
+                                                t.same(res.body, expectedFeaturedEvents);
 
-module.exports = app;
+                                                t.end();
+                                            });
+                                    })
+                                    .when("/event-detail", {
+                                            ('GET /events/:id returns the correct event', function(t) {
+                                                t.plan(2);
+                                                request(app)
+                                                    .get('/events/2')
+                                                    .expect('Content-Type', /json/)
+                                                    .expect(200)
+                                                    .end(function(err, res) {
+                                                        t.error(err, 'No error');
+                                                        t.same(res.body, expectedEvent);
+                                                        t.end();
+                                                    });
+                                            })
+                                            .when("/new-event", {
+                                                ('POST /events creates an event and returns it with an id', function(t) {
+                                                    request(app)
+                                                        .post('/events')
+                                                        .set('Accept', 'application/json')
+                                                        .send({ event: postEvent })
+                                                        .end(function(err, res) {
+                                                            t.error(err, 'No error');
 
+                                                            postEvent.id = 3;
+                                                            t.same(res.body, { event: postEvent });
 
+                                                            fs.unlinkSync(__dirname + '/../app/db/events/3.json');
 
-//<!--app.config(function($routeProvider){
-//  $routeProvider
-//  .when("/",{
-//      templateUrl: "'../app/server'"
-//  })
-//    .when("/event-list",{
-//      templateUrl: "'../app/server'"
-//  })
-//    .when("/highlighted-events",{
-//      templateUrl: "'../app/server'"
-//  })
-//    .when("/event-detail",{
-//      templateUrl: "'../app/server'"
-//  })
-//    .when("/new-event",{
-//       templateUrl: "'../app/server'"
-//  })
-//    .when("/share-event",{
-//      templateUrl: "'../app/server'"
-//  })
-//  .otherwise({redirectTo : '/'});
-//});
+                                                            t.end();
+                                                        });
+                                                })
+                                                .when("/share-event", {
+                                                    templateUrl: "'../app/server'"
+                                                })
+
+                                                .otherwise({ redirectTo: '/' });
+                                                ('GET /events/:id returns 404 when the event doesn\'t exists', function(t) {
+                                                    request(app)
+                                                        .get('/events/999')
+                                                        .expect('Content-Type', /json/)
+                                                        .expect(404)
+                                                        .end(function(err, res) {
+                                                            t.end();
+                                                        });
+                                                });
+                                            });
